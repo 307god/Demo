@@ -1,0 +1,110 @@
+<!--
+    参考文章: https://juejin.im/post/5ba27b25e51d450e4b1bf4ba
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        :root {
+            /*--box-width: 5em;*/
+        }
+
+        .box {
+            font-size: 5em;
+            /*--box-width: 5em;*/
+            width: var(--boxWidth);
+            height: 1em;
+        }
+        .up, .down {
+            position: absolute;
+            height: 100%;
+            line-height: 1;
+        }
+        .up {
+            color: var(--upColor);
+            z-index: 2;
+            width: 1em;
+            overflow: hidden;
+            border-radius: 15%;
+            background: #eee;
+            animation: run1 2.5s infinite;
+        }
+        .up::before {
+            /*content: attr(data-text);*/
+            content: var(--text);
+            position: absolute;
+            width: var(--boxWidth);
+            animation: run2 2.5s infinite;
+        }
+        .down {
+            color: var(--downColor);
+            z-index: 1;
+        }
+        @keyframes run1 {
+            0% {
+                left: -1em;
+            }
+            100% {
+                left: var(--boxWidth);
+            }
+        }
+        @keyframes run2 {
+            0% {
+                left: 1em;
+            }
+            100% {
+                left: calc(var(--boxWidth) * -1);
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="box center">
+    <div class="down"></div>
+    <div class="up"></div>
+</div>
+
+<script>
+const ready = () => {
+    textInit(123456);
+};
+
+const textInit = (text) => {
+    Array.prototype.forEach.call(document.querySelectorAll('.down'), (el) => {
+        el.innerHTML = text;
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('.up'), (el) => {
+        el.setAttribute("data-text", text);
+    });
+
+    const boxWidth = document.querySelectorAll('.down')[0].offsetWidth + "px";
+    const options = {
+        text: `'${text}'`,
+        upColor: 'lightblue',
+        downColor: 'indianred',
+        boxWidth,
+    };
+    Object.entries(options).forEach(v => {
+        document.querySelectorAll('.box')[0].style.setProperty(`--${v[0]}`, v[1]);
+    })
+};
+
+if (document.readyState !== 'loading') {
+    ready();
+} else {
+    document.addEventListener('DOMContentLoaded', ready);
+}
+</script>
+
+</body>
+</html>
