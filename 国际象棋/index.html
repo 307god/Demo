@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/assets/jquery/jquery.js"></script>
+    <script src="/assets/lodash/lodash.min.js"></script>
+    <style>
+        .container {
+            background-color: #000000;
+            width: 800px;
+            display: grid;
+            grid-template-columns: 100px 100px 100px 100px 100px 100px 100px 100px;
+            grid-template-rows: 100px 100px 100px 100px 100px 100px 100px 100px;
+        }
+        .two{
+            position: absolute;
+            background-color: transparent;
+        }
+        .item {
+            text-align: center;
+        }
+        .item-light {
+            background-color: #ecd3aa;
+        }
+        .item-dark {
+            background-color: #7c4948;
+        }
+        .item-piece {
+            position: absolute;
+        }
+        .item-king {
+            grid-area: 5/1/6/2;
+        }
+        .item-b {
+            /*grid-area: 3/3/4/4;*/
+        }
+    </style>
+</head>
+<body>
+
+<div class="container two">
+    <div class="item-king">
+        <img src="king.png">
+    </div>
+</div>
+
+<div class="container">
+
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+    <div class="item item-dark"></div>
+    <div class="item item-light"></div>
+
+</div>
+
+</body>
+
+<script>
+
+    // 记录棋子的数据
+    let checkerboard = {
+        king: [5, 1]
+    };
+
+    // 传入坐标集，生成可移动区域显示
+    // TODO
+
+    // 清除可移动区域显示
+    // TODO
+
+    const moving = () => {
+        let Coords = [];
+
+        let moveFn = {
+            king(Coord) {
+                Coords = [];
+                for (let i = -1; i < 2; i++) {
+                    for (let j = -1; j < 2; j++) {
+                        Coords.push([Coord[0] + i, Coord[1] + j]);
+                    }
+                }
+                _.remove(Coords, (item) => {
+                    return (item[0] === Coord[0] && item[1] === Coord[1]) ||
+                        (item[0] < 1 || item[1] < 1) ;
+                });
+                return Coords;
+            }
+        };
+
+        return {
+            move(type, val) {
+                return moveFn[type] ? moveFn[type](val) : $.error('没有此类棋子');
+            }
+        }
+    };
+
+    const move = moving();
+
+    $(function () {
+
+        $(".container").on("click", ".item-king", () => {
+            console.log(move.move("king", checkerboard.king));
+        });
+        // $(".item-王").eq(0).css("grid-area", "5/2/6/3")
+    })
+</script>
+
+</html>
