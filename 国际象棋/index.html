@@ -13,10 +13,6 @@
             grid-template-columns: 100px 100px 100px 100px 100px 100px 100px 100px;
             grid-template-rows: 100px 100px 100px 100px 100px 100px 100px 100px;
         }
-        .two{
-            position: absolute;
-            background-color: transparent;
-        }
         .item {
             text-align: center;
         }
@@ -26,26 +22,14 @@
         .item-dark {
             background-color: #7c4948;
         }
-        .item-piece {
-            position: absolute;
-        }
-        .item-king {
-            grid-area: 5/1/6/2;
-        }
-        .item-b {
-            /*grid-area: 3/3/4/4;*/
+        .moveArea {
+            border: solid 5px green;
         }
     </style>
 </head>
 <body>
 
-<div class="container two">
-    <div class="item-king">
-        <img src="king.png">
-    </div>
-</div>
-
-<div class="container">
+<div class="container board">
 
     <div class="item item-light"></div>
     <div class="item item-dark"></div>
@@ -125,17 +109,51 @@
 
 <script>
 
-    // 记录棋子的数据
-    let checkerboard = {
-        king: [5, 1]
+    /**
+     * 数据流定义
+     */
+    const pipe = (...fns) => {
+        return param => fns.reduce((result, fn) => fn(result), param);
     };
 
-    // 传入坐标集，生成可移动区域显示
-    // TODO
+    /**
+     * 坐标转换index
+     * @param [x, y] 当前坐标
+     * @return index值
+     */
+    const coordToIndex = ([x, y]) => {
+        return (x - 1) * 8 + y - 1;
+    };
 
-    // 清除可移动区域显示
-    // TODO
+    /**
+     * index转换坐标
+     * @param index index值
+     * @return 当前坐标
+     */
+    const indexToCoord = (index) => {
+        return [Math.floor(index / 8) + 1, index % 8 + 1]
+    };
 
+    /**
+     *  记录棋子的坐标数据和当前选中棋子
+     */
+    let checkerboard = {
+        current: "",
+        king_1: [5, 1],
+    };
+
+    /**
+     * 记录棋子的html
+     */
+    let piecesHtml = {
+        king_1: "<div class=\"item-king_1\">\n" +
+            "        <img src=\"king_1.png\">\n" +
+            "    </div>",
+    };
+
+    /**
+     * 棋子移动逻辑处理，返回可移动区域的坐标集
+     */
     const moving = () => {
         let Coords = [];
 
@@ -164,12 +182,91 @@
 
     const move = moving();
 
+    /**
+     * 传入坐标集，生成可移动区域显示
+     * @param current 当前对象
+     * @param Coords 可移动区域坐标集
+     */
+    const showMoveArea = ([current, Coords]) => {
+        _.forEach(Coords, (item) => {
+            let index = (item[0] - 1) * 8 + item[1] - 1;
+            // $(".item").eq(index).css("border", "solid 5px green");
+            $(".item").eq(index).addClass("moveArea");
+        });
+        checkerboard.current = current;
+    };
+
+    /**
+     * 清除可移动区域显示
+     */
+    const clearMoveArea = () => {
+        $(".moveArea").removeClass("moveArea");
+        checkerboard.current = null;
+    };
+
+    /**
+     * 清除当前选中棋子
+     */
+    const clearPieces = () => {
+        $(".item-" + checkerboard.current).remove();
+    };
+
+    /**
+     * 新增当前选中棋子
+     * @param index 目标坐标index值
+     */
+    const movePieces = (index) => {
+        checkerboard[checkerboard.current] = indexToCoord(index);
+        $(".item").eq(index).append(piecesHtml[checkerboard.current]);
+    };
+
+    /**
+     * 根据对象得到可移动区域坐标集
+     * @param item 当前对象
+     * @return {*[]} 可移动区域坐标集
+     */
+    const moveAreaArray = (item) => {
+        let type = _.split(item, '_', 1)[0];
+        return [item, move.move(type, checkerboard[item])];
+    };
+
+    /**
+     * 点击棋子事件
+     * @param item 当前对象
+     */
+    const clickPiecesEvent = (item) => {
+        return pipe(
+            moveAreaArray,
+            showMoveArea,
+        )(item);
+    };
+
+    /**
+     * 点击移动事件
+     * @param index 目标坐标index值
+     */
+    const clickMoveEvent = (index) => {
+        clearPieces();
+        movePieces(index);
+        clearMoveArea();
+    };
+
     $(function () {
 
-        $(".container").on("click", ".item-king", () => {
-            console.log(move.move("king", checkerboard.king));
+        for(let n in piecesHtml){
+            $(".item").eq(coordToIndex(checkerboard[n])).append(piecesHtml[n]);
+        }
+
+        const $container = $(".container");
+
+        $container.on("click", ".item-king_1", (event) => {
+            clickPiecesEvent("king_1");
         });
-        // $(".item-王").eq(0).css("grid-area", "5/2/6/3")
+
+        $container.on("click", ".moveArea", (event) => {
+            clickMoveEvent($(event.target).index());
+        });
+
     })
 </script>
 
