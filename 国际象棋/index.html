@@ -128,7 +128,7 @@
     /**
      * index转换坐标
      * @param index index值
-     * @return 当前坐标
+     * @return number[]
      */
     const indexToCoord = (index) => {
         return [Math.floor(index / 8) + 1, index % 8 + 1]
@@ -139,16 +139,73 @@
      */
     let checkerboard = {
         current: "",
-        king_1: [5, 1],
+        king_1: [4, 1],
+        queen_1: [5, 1],
+        king_2: [4, 8],
+        queen_2: [5, 8],
     };
 
     /**
      * 记录棋子的html
      */
     let piecesHtml = {
-        king_1: "<div class=\"item-king_1\">\n" +
+        king_1: "<div class=\"item-pieces item-king_1\">\n" +
             "        <img src=\"king_1.png\">\n" +
             "    </div>",
+        queen_1: "<div class=\"item-pieces item-queen_1\">\n" +
+            "        <img src=\"queen_1.png\">\n" +
+            "    </div>",
+        king_2: "<div class=\"item-pieces item-king_2\">\n" +
+            "        <img src=\"king_2.png\">\n" +
+            "    </div>",
+        queen_2: "<div class=\"item-pieces item-queen_2\">\n" +
+            "        <img src=\"queen_2.png\">\n" +
+            "    </div>",
+    };
+
+    const walk = (Coord, xChange, yChange, group, number) => {
+        let num = number || -1;
+        let Coords = [];
+        let x = Coord[0], y = Coord[1];
+        x = x + xChange;
+        y = y + yChange;
+        while (0 < x && x < 9 && 0 < y && y  < 9 && num !== 0) {
+            if (_.filter(group, (item) => {
+                return (item[0] === x && item[1] === y)
+            }).length !== 0) {
+                break;
+            }
+            // _.map(group, function(value, item) {
+            //     if (item[0] === x && item[1] === y)
+            //         break;
+            // });
+            Coords.push([x, y]);
+            num --;
+            // if (_.indexOf(group, [x, y]) !== -1) {
+            //     break;
+            // } else {
+            //     Coords.push([x, y]);
+            // }
+            x = x + xChange;
+            y = y + yChange;
+        }
+
+        return Coords;
+    };
+
+    // 走
+    const walking = (Coord, number) => {
+        // let Coords = [];
+        let group = piecesGroup();
+        return _.concat(walk(Coord, +1, +1, group, number),
+            walk(Coord, +1, -1, group, number),
+            walk(Coord, -1, +1, group, number),
+            walk(Coord, -1, -1, group, number),
+            walk(Coord, +1, +0, group, number),
+            walk(Coord, +0, +1, group, number),
+            walk(Coord, -1, +0, group, number),
+            walk(Coord, +0, -1, group, number),
+        );
     };
 
     /**
@@ -159,17 +216,21 @@
 
         let moveFn = {
             king(Coord) {
-                Coords = [];
-                for (let i = -1; i < 2; i++) {
-                    for (let j = -1; j < 2; j++) {
-                        Coords.push([Coord[0] + i, Coord[1] + j]);
-                    }
-                }
-                _.remove(Coords, (item) => {
-                    return (item[0] === Coord[0] && item[1] === Coord[1]) ||
-                        (item[0] < 1 || item[1] < 1) ;
-                });
-                return Coords;
+                // Coords = [];
+                // for (let i = -1; i < 2; i++) {
+                //     for (let j = -1; j < 2; j++) {
+                //         Coords.push([Coord[0] + i, Coord[1] + j]);
+                //     }
+                // }
+                // _.remove(Coords, (item) => {
+                //     return (item[0] === Coord[0] && item[1] === Coord[1]) ||
+                //         (item[0] < 1 || item[1] < 1) ;
+                // });
+                // return Coords;
+                return walking(Coord, 1);
+            },
+            queen(Coord) {
+                return walking(Coord);
             }
         };
 
@@ -181,6 +242,19 @@
     };
 
     const move = moving();
+
+    const piecesGroup = (groupId) => {
+        let group = [];
+        _.map(checkerboard, function(value, item) {
+            if (groupId === undefined) {
+                if (_.split(item, '_', 2)[1] !== undefined)
+                    group.push(value)
+            } else if (_.split(item, '_', 2)[1] === groupId) {
+                group.push(value);
+            }
+        });
+        return group;
+    };
 
     /**
      * 传入坐标集，生成可移动区域显示
@@ -259,12 +333,19 @@
 
         const $container = $(".container");
 
-        $container.on("click", ".item-king_1", (event) => {
-            clickPiecesEvent("king_1");
+        $container.on("click", ".item-pieces", (event) => {
+            if ($(event.currentTarget).hasClass('item-king_1'))
+                clickPiecesEvent("king_1");
+            else if ($(event.currentTarget).hasClass('item-queen_1'))
+                clickPiecesEvent("queen_1");
+            else if ($(event.currentTarget).hasClass('item-king_2'))
+                clickPiecesEvent("king_2");
+            else if ($(event.currentTarget).hasClass('item-queen_2'))
+                clickPiecesEvent("queen_2");
         });
 
         $container.on("click", ".moveArea", (event) => {
-            clickMoveEvent($(event.target).index());
+            clickMoveEvent($(event.currentTarget).index());
         });
 
     })
