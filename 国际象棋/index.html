@@ -163,86 +163,6 @@
             "    </div>",
     };
 
-    const walk = (Coord, xChange, yChange, group, number) => {
-        let num = number || -1;
-        let Coords = [];
-        let x = Coord[0], y = Coord[1];
-        x = x + xChange;
-        y = y + yChange;
-        while (0 < x && x < 9 && 0 < y && y  < 9 && num !== 0) {
-            if (_.filter(group, (item) => {
-                return (item[0] === x && item[1] === y)
-            }).length !== 0) {
-                break;
-            }
-            // _.map(group, function(value, item) {
-            //     if (item[0] === x && item[1] === y)
-            //         break;
-            // });
-            Coords.push([x, y]);
-            num --;
-            // if (_.indexOf(group, [x, y]) !== -1) {
-            //     break;
-            // } else {
-            //     Coords.push([x, y]);
-            // }
-            x = x + xChange;
-            y = y + yChange;
-        }
-
-        return Coords;
-    };
-
-    // 走
-    const walking = (Coord, number) => {
-        // let Coords = [];
-        let group = piecesGroup();
-        return _.concat(walk(Coord, +1, +1, group, number),
-            walk(Coord, +1, -1, group, number),
-            walk(Coord, -1, +1, group, number),
-            walk(Coord, -1, -1, group, number),
-            walk(Coord, +1, +0, group, number),
-            walk(Coord, +0, +1, group, number),
-            walk(Coord, -1, +0, group, number),
-            walk(Coord, +0, -1, group, number),
-        );
-    };
-
-    /**
-     * 棋子移动逻辑处理，返回可移动区域的坐标集
-     */
-    const moving = () => {
-        let Coords = [];
-
-        let moveFn = {
-            king(Coord) {
-                // Coords = [];
-                // for (let i = -1; i < 2; i++) {
-                //     for (let j = -1; j < 2; j++) {
-                //         Coords.push([Coord[0] + i, Coord[1] + j]);
-                //     }
-                // }
-                // _.remove(Coords, (item) => {
-                //     return (item[0] === Coord[0] && item[1] === Coord[1]) ||
-                //         (item[0] < 1 || item[1] < 1) ;
-                // });
-                // return Coords;
-                return walking(Coord, 1);
-            },
-            queen(Coord) {
-                return walking(Coord);
-            }
-        };
-
-        return {
-            move(type, val) {
-                return moveFn[type] ? moveFn[type](val) : $.error('没有此类棋子');
-            }
-        }
-    };
-
-    const move = moving();
-
     const piecesGroup = (groupId) => {
         let group = [];
         _.map(checkerboard, function(value, item) {
@@ -255,6 +175,87 @@
         });
         return group;
     };
+
+    /**
+     * 棋子移动逻辑处理，返回可移动区域的坐标集
+     */
+    const moving = () => {
+        let Coords = [];
+
+        const walk = (Coord, xChange, yChange, group, number) => {
+            let num = number || -1;
+            let Coords = [];
+            let x = Coord[0], y = Coord[1];
+            x = x + xChange;
+            y = y + yChange;
+
+            while (0 < x && x < 9 && 0 < y && y  < 9 && num !== 0) {
+                if (_.filter(group, (item) => {
+                    return (item[0] === x && item[1] === y)
+                }).length !== 0) {
+                    break;
+                }
+                Coords.push([x, y]);
+                num --;
+                x = x + xChange;
+                y = y + yChange;
+            }
+
+            return Coords;
+        };
+
+        // 棋子坐标组
+        const group = piecesGroup();
+
+        // 棋子移动方法函数
+        const walkingFn = {
+            oblique(Coord, number) {
+                return _.concat(walk(Coord, +1, +1, group, number),
+                    walk(Coord, +1, -1, group, number),
+                    walk(Coord, -1, +1, group, number),
+                    walk(Coord, -1, -1, group, number),
+                );
+            },
+            straight(Coord, number) {
+                return _.concat(walk(Coord, +1, +0, group, number),
+                    walk(Coord, +0, +1, group, number),
+                    walk(Coord, -1, +0, group, number),
+                    walk(Coord, +0, -1, group, number),
+                );
+            }
+        };
+
+        // 棋子移动方法函数整合
+        let walking = (types, params) => {
+            let Coords = [];
+            _.forEach(types, (type) => {
+                Coords = _.concat(Coords, walkingFn[type](...params))
+            });
+            return Coords;
+        };
+
+        // 棋子移动方法函数绑定
+        let moveFn = {
+            king(Coord) {
+                return walking(["oblique", "straight"],[Coord, 1]);
+            },
+            queen(Coord) {
+                return walking(["oblique", "straight"],[Coord]);
+            }
+        };
+
+        // 访问棋子可移动区域的接口
+        let move = (type, val) => {
+            return moveFn[type] ? moveFn[type](val) : $.error('没有此类棋子');
+        };
+
+        // 冰冻工厂模式 Object.freeze()冻结了对象，不能够对其添加新的属性
+        return Object.freeze({
+            move,
+        })
+    };
+
+    const move = moving();
 
     /**
      * 传入坐标集，生成可移动区域显示
@@ -327,12 +328,14 @@
 
     $(function () {
 
+        // 创建棋子们的可视化html
         for(let n in piecesHtml){
             $(".item").eq(coordToIndex(checkerboard[n])).append(piecesHtml[n]);
         }
 
         const $container = $(".container");
 
+        // 绑定棋子的监听事件
         $container.on("click", ".item-pieces", (event) => {
             if ($(event.currentTarget).hasClass('item-king_1'))
                 clickPiecesEvent("king_1");
@@ -344,6 +347,7 @@
                 clickPiecesEvent("queen_2");
         });
 
+        // 绑定棋子可移动区域的监听事件
         $container.on("click", ".moveArea", (event) => {
             clickMoveEvent($(event.currentTarget).index());
         });
